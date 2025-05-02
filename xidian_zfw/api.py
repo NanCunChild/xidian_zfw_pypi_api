@@ -117,9 +117,7 @@ class XidianZFW:
                 captcha_response = temp_session.get('https://zfw.xidian.edu.cn/site/captcha', cookies=cookies)
                 captcha_image = captcha_response.content
 
-                # 多重验证码识别
-                candidates = [self._recognize_captcha(captcha_image) for _ in range(5)]
-                validation_code = Counter(candidates).most_common(1)[0][0]
+                validation_code = self._recognize_captcha(captcha_image)
 
                 # 密码加密处理
                 encrypted_pwd = self._encrypt_password(password, public_key)

@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="xidian-zfw",
-    version="0.2.0",
+    version="0.2.3",
     author="NanCunChild",
     author_email="nancunchild@gmail.com",
     description="API for Xidian ZFW network system",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/NanCunChild/xidian-zfw-pypi",
+    url="https://github.com/NanCunChild/xidian_zfw_pypi_api",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
