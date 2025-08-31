@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 import os
 
-version = os.environ.get("GITHUB_REF_NAME")
+version_str = os.environ.get("GITHUB_REF_NAME")
 
-if version:
-    version = version.lstrip("v")
+if version_str and version_str.startswith('v'):
+    version = version_str.lstrip("v")
 else:
-    version = "0.0.0.dev0" 
+    version = "0.0.0.dev0"
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
