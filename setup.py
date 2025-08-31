@@ -1,11 +1,19 @@
 from setuptools import setup, find_packages
+import os
+
+version = os.environ.get("GITHUB_REF_NAME")
+
+if version:
+    version = version.lstrip("v")
+else:
+    version = "0.0.0.dev0" 
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name="xidian-zfw",
-    version="0.3.0",
+    version=version,
     author="NanCunChild",
     author_email="nancunchild@gmail.com",
     description="API for Xidian ZFW network system",
@@ -25,8 +33,8 @@ setup(
         "beautifulsoup4>=4.8.0",
         "pycryptodome>=3.16.0",
         "Pillow>=11.1.0",
-        "ddddocr>=1.0.5",
         "onnxruntime>=1.18.0",
+        "numpy>=2.3.0",
         "urllib3>=2.2.0",
         "python-dotenv>=1.1.0"
     ],
