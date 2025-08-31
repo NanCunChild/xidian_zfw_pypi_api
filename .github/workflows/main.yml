@@ -25,6 +25,13 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: 🔍 Debug Info
+      run: |
+        echo "GITHUB_REF_NAME is: ${{ github.ref_name }}"
+        echo "--- Contents of setup.py ---"
+        cat setup.py
+        echo "----------------------------"
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
