@@ -17,6 +17,7 @@ setup(
     author="NanCunChild",
     author_email="nancunchild@gmail.com",
     description="API for Xidian ZFW network system",
+    license="GPL-3.0-or-later",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/NanCunChild/xidian_zfw_pypi_api",
@@ -24,7 +25,6 @@ setup(
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GPL version 3",
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.12",
