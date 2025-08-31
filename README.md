@@ -44,6 +44,7 @@ login(self,username,password) -> dict
 | 类型   | 内容说明     |
 | ---- | -------- |
 | dict | 登陆状态相关信息 |
+
 结构（登录成功）：
 
 ```
