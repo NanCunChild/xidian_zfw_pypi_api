@@ -21,6 +21,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/NanCunChild/xidian_zfw_pypi_api",
     packages=find_packages(),
+    include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GPL version 3",
