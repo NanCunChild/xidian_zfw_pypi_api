@@ -1,0 +1,13 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+xidian_zfw/__init__.py
+xidian_zfw/api.py
+xidian_zfw/crnn_model.onnx
+xidian_zfw/onnx_predict.py
+xidian_zfw.egg-info/PKG-INFO
+xidian_zfw.egg-info/SOURCES.txt
+xidian_zfw.egg-info/dependency_links.txt
+xidian_zfw.egg-info/requires.txt
+xidian_zfw.egg-info/top_level.txt

@@ -8,25 +8,37 @@ from Crypto.Cipher import PKCS1_v1_5
 import base64
 from PIL import Image
 from io import BytesIO
-import ddddocr
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import re
 from collections import Counter
 import os
+import numpy as np
 import onnxruntime
 
 if not hasattr(Image, 'ANTIALIAS'):
     Image.ANTIALIAS = Image.LANCZOS
 
 class XidianZFW:
+    _current_dir = os.path.dirname(os.path.abspath(__file__))
+    MODEL_PATH = os.path.join(_current_dir, 'crnn_model.onnx')
+    CHARACTERS = "0123456789"
+    IMAGE_WIDTH = 90
+    IMAGE_HEIGHT = 34 
     def __init__(self):
-        os.environ['ORT_TENSORRT_LOG_LEVEL'] = '3'  # 只显示错误信息
+        os.environ['ORT_TENSORRT_LOG_LEVEL'] = '3'
         os.environ['ORT_TENSORRT_FP16_ENABLE'] = '1'
         
         sess_options = onnxruntime.SessionOptions()
         sess_options.log_severity_level = 3
-        self.ocr = ddddocr.DdddOcr()
+
+        print("[INFO] 正在初始化ONNX OCR预测器...")
+        self.onnx_session = onnxruntime.InferenceSession(self.MODEL_PATH, sess_options)
+        self.input_name = self.onnx_session.get_inputs()[0].name
+        self.output_name = self.onnx_session.get_outputs()[0].name
+        self.int_to_char = {i + 1: char for i, char in enumerate(self.CHARACTERS)}
+        print("[INFO] ONNX OCR预测器初始化成功。")
+
         self.session = self._create_session_with_retries()
         self.cookies = None
         self.csrf_token = None
@@ -49,6 +61,25 @@ class XidianZFW:
         adapter = HTTPAdapter(max_retries=retry_strategy)
         session.mount("https://", adapter)
         return session
+
+    @staticmethod
+    def _ctc_decode_np(preds, int_to_char):
+        """
+        使用 NumPy 解码 CTC 模型的输出
+        :param preds: 模型的原始输出 (NumPy array), shape: [seq_len, num_classes]
+        :param int_to_char: 索引到字符的映射字典
+        :return: 解码后的字符串
+        """
+        preds_idx = np.argmax(preds, axis=1)
+        processed_indices = []
+        for i, p_idx in enumerate(preds_idx):
+            if i == 0 or p_idx != preds_idx[i - 1]:
+                processed_indices.append(p_idx)
+        decoded_text = ""
+        for idx in processed_indices:
+            if idx != 0:
+                decoded_text += int_to_char[idx]
+        return decoded_text
 
     def _is_valid_ip(self, ip_address):
         """检查字符串是否为有效的 IPv4 地址"""
@@ -84,9 +115,21 @@ class XidianZFW:
         response.raise_for_status()
         return response.content
 
-    def _recognize_captcha(self, image):
-        """使用 ddddocr 识别验证码"""
-        result = self.ocr.classification(image)
+    def _recognize_captcha(self, image_bytes):
+        """使用私有的 ONNX 模型识别验证码"""
+        image_stream = BytesIO(image_bytes)
+        image = Image.open(image_stream).convert('L')
+        image = image.resize((self.IMAGE_WIDTH, self.IMAGE_HEIGHT), Image.LANCZOS)
+        
+        image_np = np.array(image, dtype=np.float32) / 255.0
+        image_np = (image_np - 0.5) / 0.5
+        input_tensor = np.expand_dims(np.expand_dims(image_np, axis=0), axis=0)
+
+        outputs = self.onnx_session.run([self.output_name], {self.input_name: input_tensor})[0]
+        
+        preds = outputs.squeeze(1)
+        result = self._ctc_decode_np(preds, self.int_to_char)
+        
         return result
 
     def login(self, username, password):

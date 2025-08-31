@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="xidian-zfw",
-    version="0.2.3",
+    version="0.3.0",
     author="NanCunChild",
     author_email="nancunchild@gmail.com",
     description="API for Xidian ZFW network system",
