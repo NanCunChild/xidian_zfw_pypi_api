@@ -16,7 +16,7 @@ def test_class_instantiation():
 # --- 测试 2：需要登录的集成测试 ---
 
 # 检查是否设置了用于测试的用户名和密码环境变量
-credentials_are_set = 'XD_USERNAME' in os.environ and 'XD_PASSWORD' in os.environ
+credentials_are_set = 'XDZFW_USERNAME' in os.environ and 'XDZFW_PASSWORD' in os.environ
 
 @pytest.mark.skipif(not credentials_are_set, reason="未在环境变量中设置测试凭据 (XD_USERNAME, XD_PASSWORD)")
 def test_login_and_modify_profile():
@@ -27,8 +27,8 @@ def test_login_and_modify_profile():
     3. 验证两个操作都返回成功状态。
     """
     # 1. 从环境变量获取凭据
-    username = os.environ['XD_USERNAME']
-    password = os.environ['XD_PASSWORD']
+    username = os.environ['XDZFW_USERNAME']
+    password = os.environ['XDZFW_PASSWORD']
 
     # 2. 实例化并登录
     client = XidianZFW()
