@@ -143,7 +143,7 @@ class XidianZFW:
         Returns:
             dict: 包含登录状态及相关信息
         """
-        for attempt in range(3):
+        for attempt in range(2):
             try:
                 # 创建独立会话防止状态污染
                 temp_session = self._create_session_with_retries()
@@ -207,7 +207,7 @@ class XidianZFW:
                 if attempt == 2:
                     return {'status': 'error', 'message': f"登录失败: {str(e)}"}
 
-        return {'status': 'error', 'message': '三次尝试均失败'}
+        return {'status': 'error', 'message': '2次尝试均失败'}
 
     def _handle_success_login(self, username, encrypted_pwd, validation_code):
         """处理成功登录后的信息获取"""
@@ -222,33 +222,25 @@ class XidianZFW:
             'ip_free': plan_info['ip_free']
         }
 
-    def get_plan_info(self, username, encrypted_password=None, validation_code=None):
+    def get_plan_info(self):
         """
         获取用户套餐信息
-        
-        Args:
-            username (str): 用户名
-            encrypted_password (str, optional): 加密后的密码，如果已登录可不传
-            validation_code (str, optional): 验证码，如果已登录可不传
+        删除了可以通过该函数登录的功能，NCC认为违反单一责任原则，于2025/09/01修改。
             
         Returns:
             dict: 包含套餐数量、运营商信息和IP信息的字典
         """
-        url = 'https://zfw.xidian.edu.cn/'
+
+        if not self.session.cookies:
+            return {'status': 'error', 'message': '用户未登录，请先调用 login() 方法。'}
         
-        if encrypted_password and validation_code:
-            data = {
-                '_csrf-8800': self.csrf_token,
-                'LoginForm[username]': username,
-                'LoginForm[password]': encrypted_password,
-                'LoginForm[smsCode]': "",
-                'LoginForm[verifyCode]': validation_code
-            }
-            response = self.session.post(url, data=data)
-        else:
-            response = self.session.get(url)
-            
-        response.raise_for_status()
+        try:
+            url = 'https://zfw.xidian.edu.cn/'
+            response = self.session.get(url)  
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            return {'status': 'error', 'message': f'请求失败: {str(e)}', 'mac_auth_enabled': False, 'mac_list': []}
+        
         return self._parse_html(response.text)
 
     def _parse_html(self, html):
@@ -320,6 +312,7 @@ class XidianZFW:
         plan_num = 0
         unicom_plan = False
         telecom_plan = False
+        mobile_plan = False
         public_plan = False
         special_plan = False
         
@@ -334,6 +327,8 @@ class XidianZFW:
                         unicom_plan = True
                     elif "电信" in text:
                         telecom_plan = True
+                    elif "移动" in text:
+                        mobile_plan = True
                     elif "因公" in text:
                         public_plan = True
                     else:
@@ -343,6 +338,7 @@ class XidianZFW:
             'plan_num': plan_num,
             'unicom_plan': unicom_plan,
             'telecom_plan': telecom_plan,
+            'mobile_plan': mobile_plan,
             'public_plan': public_plan,
             'special_plan': special_plan
         }
@@ -394,6 +390,9 @@ class XidianZFW:
         
     def get_mac_auth_info(self):
         """获取无感知MAC认证状态及绑定的MAC地址列表"""
+        if not self.session.cookies:
+            return {'status': 'error', 'message': '用户未登录，请先调用 login() 方法。'}
+        
         try:
             url = 'https://zfw.xidian.edu.cn/user/mac-auth'
             headers = {'Referer': url}
@@ -475,10 +474,10 @@ class XidianZFW:
             get_response.raise_for_status()
             soup = BeautifulSoup(get_response.text, 'html.parser')
 
-            # csrf_input = soup.find('input', {'name': '_csrf-8800'})
-            # if not csrf_input:
-            #     return {'status': 'error', 'message': '无法在页面上找到CSRF令牌，可能页面已更新。'}
-            # csrf_token = csrf_input['value']
+            csrf_input = soup.find('input', {'name': '_csrf-8800'})
+            if not csrf_input:
+                return {'status': 'error', 'message': '无法在页面上找到CSRF令牌，可能页面已更新。'}
+            csrf_token = csrf_input['value']
 
             # 获取表单中当前的手机号和邮箱，以便在用户未提供新值时使用旧值
             current_phone_input = soup.find('input', {'id': 'userform-phone'})
@@ -488,7 +487,7 @@ class XidianZFW:
             current_email = current_email_input['value'] if current_email_input else ''
 
             payload = {
-                '_csrf-8800': self.csrf_token,
+                '_csrf-8800': csrf_token,
                 'UserForm[phone]': phone if phone is not None else current_phone,
                 'UserForm[email]': email if email is not None else current_email,
             }

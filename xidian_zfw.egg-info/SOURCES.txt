@@ -2,6 +2,7 @@ LICENSE
 MANIFEST.in
 README.md
 setup.py
+tests/test_api.py
 xidian_zfw/__init__.py
 xidian_zfw/api.py
 xidian_zfw/crnn_model.onnx
