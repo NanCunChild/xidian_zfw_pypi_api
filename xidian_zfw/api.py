@@ -449,6 +449,76 @@ class XidianZFW:
             'mac_auth_enabled': status_text == '开启',
             'mac_list': mac_list
         }
+    
+    def modify_profile(self, phone=None, email=None):
+        """
+        修改用户的个人资料（手机号和/或邮箱）。
+
+        Args:
+            phone (str, optional): 新的手机号码。如果为 None，则不修改。
+            email (str, optional): 新的邮箱地址。如果为 None，则不修改。
+
+        Returns:
+            dict: 包含操作状态和信息的字典。
+        """
+        if not self.session.cookies:
+            return {'status': 'error', 'message': '用户未登录，请先调用 login() 方法。'}
+
+        if phone is None and email is None:
+            return {'status': 'info', 'message': '未提供任何需要修改的信息。'}
+
+        modify_url = 'https://zfw.xidian.edu.cn/user/modify'
+
+        try:
+            print("[INFO] 正在获取个人资料页面以准备修改...")
+            get_response = self.session.get(modify_url)
+            get_response.raise_for_status()
+            soup = BeautifulSoup(get_response.text, 'html.parser')
+
+            # csrf_input = soup.find('input', {'name': '_csrf-8800'})
+            # if not csrf_input:
+            #     return {'status': 'error', 'message': '无法在页面上找到CSRF令牌，可能页面已更新。'}
+            # csrf_token = csrf_input['value']
+
+            # 获取表单中当前的手机号和邮箱，以便在用户未提供新值时使用旧值
+            current_phone_input = soup.find('input', {'id': 'userform-phone'})
+            current_email_input = soup.find('input', {'id': 'userform-email'})
+            
+            current_phone = current_phone_input['value'] if current_phone_input else ''
+            current_email = current_email_input['value'] if current_email_input else ''
+
+            payload = {
+                '_csrf-8800': self.csrf_token,
+                'UserForm[phone]': phone if phone is not None else current_phone,
+                'UserForm[email]': email if email is not None else current_email,
+            }
+            
+            print(f"[INFO] 正在提交更新请求: {payload}")
+            post_response = self.session.post(
+                modify_url,
+                data=payload,
+                headers={'Referer': modify_url}
+            )
+            post_response.raise_for_status()
+
+            if post_response.status_code == 200 and modify_url in post_response.url:
+                if '用户信息修改成功' in post_response.text or 'alert-success' in post_response.text:
+                    return {'status': 'success', 'message': '个人资料修改成功。'}
+                else:
+                    error_soup = BeautifulSoup(post_response.text, 'html.parser')
+                    error_div = error_soup.find('div', class_='alert-danger')
+                    if error_div:
+                        error_message = error_div.get_text(strip=True)
+                        return {'status': 'error', 'message': f'修改失败: {error_message}'}
+                    return {'status': 'error', 'message': '提交成功，但在返回页面未找到成功标识。'}
+            else:
+                return {'status': 'error', 'message': f'请求失败，最终状态码: {post_response.status_code}'}
+
+        except requests.exceptions.RequestException as e:
+            return {'status': 'error', 'message': f'网络请求异常: {e}'}
+        except Exception as e:
+            return {'status': 'error', 'message': f'发生未知错误: {e}'}
+
 
     def batch_login_from_file(self, file_path):
         """
