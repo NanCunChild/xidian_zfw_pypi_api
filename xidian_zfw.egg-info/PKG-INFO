@@ -5,7 +5,7 @@ Summary: API for Xidian ZFW network system
 Home-page: https://github.com/NanCunChild/xidian_zfw_pypi_api
 Author: NanCunChild
 Author-email: nancunchild@gmail.com
-License: GPL-3.0-or-later
+License: GPL-3.0-only WITH Classpath-Exception-2.0 OR BSD-3-Clause
 Classifier: Programming Language :: Python :: 3
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.12

@@ -185,7 +185,7 @@ class XidianZFW:
                 # 处理登录结果
                 if login_data.get("message") == "success":
                     # 登录成功同步会话状态
-                    self.session = temp_session
+                    self.session = temp_session # NCC猜测这一步是一切的关键，为什么能阻止高级爬虫师hxgg，有可能就是这里，网站的3次跳转迷人眼，可能这个才是真相
                     self.cookies = cookies
                     self.csrf_token = csrf_token
                     self.public_key = public_key
@@ -211,7 +211,7 @@ class XidianZFW:
 
     def _handle_success_login(self, username, encrypted_pwd, validation_code):
         """处理成功登录后的信息获取"""
-        plan_info = self.get_plan_info(username, encrypted_pwd, validation_code)
+        plan_info = self.get_plan_info()
         return {
             'status': 'success',
             'message': '登录成功',
@@ -373,7 +373,7 @@ class XidianZFW:
 
     def _handle_success_login(self, username, encrypted_pwd, validation_code):
         """处理成功登录后的信息获取"""
-        plan_info = self.get_plan_info(username, encrypted_pwd, validation_code)
+        plan_info = self.get_plan_info()
         return {
             'status': 'success',
             'message': '登录成功',
